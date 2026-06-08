@@ -1,0 +1,14 @@
+{
+  "name": "datalab-portal-starter",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:vue": "npm run dev -w @datalab/vue-portal",
+    "build:vue": "npm run build -w @datalab/vue-portal",
+    "check": "npm run typecheck -w @datalab/api-client && npm run typecheck -w @datalab/shared && npm run typecheck -w @datalab/vue-portal"
+  }
+}
