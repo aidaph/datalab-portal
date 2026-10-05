@@ -14,12 +14,8 @@ El portal está pensado para un flujo simple y claro:
 
 ### 1. Presentación
 
-Dos apps separadas:
-
-- React para equipos que prefieren ecosistema React.
-- Vue para equipos que prefieren composición y SFC.
-
-Ambas comparten contrato de API, tipos y convenciones de carpetas.
+Una app React (`apps/react-portal`) que consume el contrato de API tipado de
+`packages/shared` a través de `packages/api-client`.
 
 ### 2. Cliente compartido
 

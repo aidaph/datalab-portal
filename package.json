@@ -1,5 +1,5 @@
 {
-  "name": "datalab-portal-starter",
+  "name": "datalab-portal",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
@@ -7,8 +7,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:vue": "npm run dev -w @datalab/vue-portal",
-    "build:vue": "npm run build -w @datalab/vue-portal",
-    "check": "npm run typecheck -w @datalab/api-client && npm run typecheck -w @datalab/shared && npm run typecheck -w @datalab/vue-portal"
+    "dev": "npm run dev -w @datalab/react-portal",
+    "build": "npm run build -w @datalab/react-portal",
+    "preview": "npm run preview -w @datalab/react-portal",
+    "check": "npm run typecheck -w @datalab/shared && npm run typecheck -w @datalab/api-client && npm run typecheck -w @datalab/react-portal"
   }
 }

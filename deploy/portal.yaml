@@ -1,0 +1,82 @@
+# DataLab portal at https://portal.datalab.ifca.es
+#
+# TLS uses the *.datalab.ifca.es wildcard, copied into this namespace:
+#   kubectl -n datalab-api get secret cert-secret -o json \
+#     | jq 'del(.metadata.namespace,.metadata.uid,.metadata.resourceVersion,.metadata.creationTimestamp,.metadata.ownerReferences)' \
+#     | kubectl -n datalab-portal apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: datalab-portal
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: datalab-portal
+  namespace: datalab-portal
+  labels:
+    app: datalab-portal
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: datalab-portal
+  template:
+    metadata:
+      labels:
+        app: datalab-portal
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: portal
+          image: ghcr.io/aidaph/datalab-portal:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            periodSeconds: 30
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { cpu: 200m, memory: 128Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: datalab-portal
+  namespace: datalab-portal
+spec:
+  selector:
+    app: datalab-portal
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: datalab-portal
+  namespace: datalab-portal
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [portal.datalab.ifca.es]
+      secretName: cert-secret
+  rules:
+    - host: portal.datalab.ifca.es
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: datalab-portal
+                port:
+                  number: 80
