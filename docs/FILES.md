@@ -2,7 +2,7 @@
 
 ## raíz
 
-- `package.json`: workspaces y scripts globales.
+- `package.json`: workspaces y scripts (`dev`, `build`, `check`).
 - `tsconfig.base.json`: configuración TypeScript compartida.
 - `README.md`: guía rápida.
 - `.vscode/`: configuración sugerida para VS Code.
@@ -10,34 +10,25 @@
 
 ## apps/react-portal
 
-- `package.json`: dependencias de React.
 - `vite.config.ts`: configuración del servidor de desarrollo.
 - `src/main.tsx`: punto de entrada.
-- `src/App.tsx`: orquestación principal.
+- `src/App.tsx`: orquestación principal (pestañas, diálogos).
 - `src/styles.css`: estilos globales.
-- `src/components/PortalShell.tsx`: layout principal.
-- `src/components/AuthPanel.tsx`: captura del token y sesión.
-- `src/components/CreateEnvironmentForm.tsx`: formulario de creación.
-- `src/components/EnvironmentList.tsx`: tabla y acciones.
 - `src/lib/config.ts`: lectura de variables de entorno.
-
-## apps/vue-portal
-
-- `package.json`: dependencias de Vue.
-- `vite.config.ts`: configuración del servidor de desarrollo.
-- `src/main.ts`: punto de entrada.
-- `src/App.vue`: contenedor principal.
-- `src/styles.css`: estilos globales.
-- `src/components/PortalShell.vue`: layout principal.
-- `src/components/AuthPanel.vue`: captura del token y sesión.
-- `src/components/CreateEnvironmentForm.vue`: formulario de creación.
-- `src/components/EnvironmentList.vue`: tabla y acciones.
-- `src/lib/config.ts`: lectura de variables de entorno.
+- `src/lib/deployments.ts`: catálogo local de respaldo, etiquetas, iconos y mensajes de error.
+- `src/hooks/useAuthSession.ts`: login OAuth, token, `/users/me`, caducidad y logout.
+- `src/hooks/useEnvironments.ts`: estado de entornos, servidores y Kafka; polling y acciones.
+- `src/hooks/useToasts.tsx`: avisos.
+- `src/components/PortalShell.tsx`: layout y pantalla de login.
+- `src/components/EnvironmentList.tsx`: lista de hubs y Kafka con sus acciones.
+- `src/components/DeploymentPicker.tsx`: selección de tipo y formulario de Kafka.
+- `src/components/KafkaCredentialsDialog.tsx`: muestra una única vez la configuración de cliente Kafka.
+- `src/components/ConfirmDialog.tsx`, `src/components/Toaster.tsx`: UI común.
 
 ## packages/api-client
 
-- `src/index.ts`: cliente compartido de la API.
+- `src/index.ts`: cliente tipado de la API (`DatalabApiClient`, `DatalabApiError`).
 
 ## packages/shared
 
-- `src/index.ts`: tipos y normalizadores compartidos.
+- `src/index.ts`: tipos del contrato de la API y helpers (`isTransient`, `canManage`, `hubUsername`).
