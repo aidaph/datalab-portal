@@ -23,6 +23,13 @@ export interface DeploymentTypeInfo {
   hub_username_claim?: "login" | "email" | null;
   /** The hub only accepts Keycloak (SSO) logins. */
   keycloak_only?: boolean;
+  /**
+   * What the service is. Absent in the current API: "kafka" for the Kafka type
+   * and "jupyterhub" for the rest. "link" entries just open `url`.
+   */
+  kind?: "jupyterhub" | "kafka" | "link";
+  /** For "link" services: where they live (e.g. Open OnDemand). */
+  url?: string;
 }
 
 export type EnvironmentStatus = "provisioning" | "ready" | "failed" | "deleting";

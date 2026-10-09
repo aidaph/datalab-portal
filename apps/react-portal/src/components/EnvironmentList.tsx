@@ -12,6 +12,7 @@ import {
 } from "@datalab/shared";
 import { deploymentLabel, logoFor } from "../lib/deployments";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { hubLink } from "../lib/hubLinks";
 
 interface EnvironmentListProps {
   deploymentTypes: DeploymentTypeInfo[];
@@ -88,6 +89,7 @@ export function EnvironmentList({
               server={servers[env.type]}
               manageable={canManage(user, env.created_by)}
               canUse={canUseHub(user, deploymentTypes.find((item) => item.type === env.type))}
+              sso={!!deploymentTypes.find((item) => item.type === env.type)?.keycloak_only}
               envBusy={busy.has(`env:${env.type}`)}
               serverBusy={busy.has(`server:${env.type}`)}
               onRetry={() => onRetry(env.type)}
@@ -137,6 +139,8 @@ interface HubRowProps {
   manageable: boolean;
   /** False when the hub does not accept the user's login (e.g. SSO-only hub, GitHub user). */
   canUse: boolean;
+  /** The hub signs in with Keycloak: open it through the SSO flow (no login page). */
+  sso: boolean;
   envBusy: boolean;
   serverBusy: boolean;
   onRetry: () => void;
@@ -151,6 +155,7 @@ function HubRow({
   server,
   manageable,
   canUse,
+  sso,
   envBusy,
   serverBusy,
   onRetry,
@@ -202,11 +207,11 @@ function HubRow({
           </button>
         ) : null}
         {usable && server && serverStatus === "running" ? (
-          <a className="btn btn-primary btn-sm" href={server.url} target="_blank" rel="noreferrer">
+          <a className="btn btn-primary btn-sm" href={hubLink(env.hub_url, server.url, sso)} target="_blank" rel="noreferrer">
             Open Jupyter
           </a>
         ) : ready ? (
-          <a className="btn btn-secondary btn-sm" href={env.hub_url} target="_blank" rel="noreferrer">
+          <a className="btn btn-secondary btn-sm" href={hubLink(env.hub_url, "/hub/", sso)} target="_blank" rel="noreferrer">
             Open hub
           </a>
         ) : null}

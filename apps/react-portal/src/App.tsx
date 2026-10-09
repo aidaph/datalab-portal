@@ -1,30 +1,25 @@
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
 import { PortalShell } from "./components/PortalShell";
-import { DeploymentPicker } from "./components/DeploymentPicker";
+import { ServiceCatalog } from "./components/ServiceCatalog";
 import { EnvironmentList } from "./components/EnvironmentList";
+import { KafkaCreateDialog } from "./components/KafkaCreateDialog";
 import { KafkaCredentialsDialog } from "./components/KafkaCredentialsDialog";
 import { Toaster } from "./components/Toaster";
 import { ToastProvider } from "./hooks/useToasts";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useEnvironments } from "./hooks/useEnvironments";
 
-type Tab = "active" | "new";
-
 function Dashboard() {
   const session = useAuthSession();
   const controller = useEnvironments(session.client, session.user);
-  const [tab, setTab] = useState<Tab>("active");
+  const [creatingKafka, setCreatingKafka] = useState(false);
+  const activeRef = useRef<HTMLElement>(null);
 
-  const existingTypes = useMemo(() => {
-    const types = new Set(controller.environments.map((env) => env.type));
-    if (controller.kafka) types.add("kafka");
-    return types;
-  }, [controller.environments, controller.kafka]);
-
-  const total = existingTypes.size;
+  const total = controller.environments.length + (controller.kafka ? 1 : 0);
   const readyCount =
     controller.environments.filter((env) => env.status === "ready").length +
     (controller.kafka?.status === "ready" ? 1 : 0);
+  const showDetails = () => activeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
     <PortalShell
@@ -36,43 +31,46 @@ function Dashboard() {
       onLoginSso={session.loginWithSSO}
       onLogout={session.logout}
     >
-      <div className="dashboard-header">
-        <div>
-          <h2 className="section-title">Interactive environments</h2>
-          <p className="section-text">Create and manage your environments on Kubernetes at the IFCA infrastructure.</p>
+      <section className="stack" aria-labelledby="services-title">
+        <div className="dashboard-header">
+          <div>
+            <h2 id="services-title" className="section-title section-title-lg">
+              What you can do in the DataLab
+            </h2>
+            <p className="section-text">
+              Launch an environment, open the ones you already have, or connect to the platform services.
+            </p>
+          </div>
         </div>
-        <div className="stat-pill">
-          <span className="stat-pill-value">{total}</span>
-          <span className="stat-pill-label">
-            environment{total === 1 ? "" : "s"}
-            {readyCount < total ? ` · ${readyCount} ready` : ""}
-          </span>
-        </div>
-      </div>
+        <ServiceCatalog
+          services={controller.deploymentTypes}
+          environments={controller.environments}
+          kafka={controller.kafka}
+          user={session.user}
+          busy={controller.busy}
+          onCreate={(type) => void controller.createEnvironment(type)}
+          onCreateKafka={() => setCreatingKafka(true)}
+          onShowDetails={showDetails}
+        />
+      </section>
 
-      <div className="card stack">
-        <div className="tabs" role="tablist" aria-label="Portal sections">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "active"}
-            className={`tab${tab === "active" ? " active" : ""}`}
-            onClick={() => setTab("active")}
-          >
-            Active environments
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "new"}
-            className={`tab${tab === "new" ? " active" : ""}`}
-            onClick={() => setTab("new")}
-          >
-            New environment
-          </button>
+      <section ref={activeRef} className="stack dashboard-active" aria-labelledby="active-title">
+        <div className="dashboard-header">
+          <div>
+            <h2 id="active-title" className="section-title">
+              Your environments
+            </h2>
+            <p className="section-text">Servers, status and connection details of what is running.</p>
+          </div>
+          <div className="stat-pill">
+            <span className="stat-pill-value">{total}</span>
+            <span className="stat-pill-label">
+              environment{total === 1 ? "" : "s"}
+              {readyCount < total ? ` · ${readyCount} ready` : ""}
+            </span>
+          </div>
         </div>
-
-        {tab === "active" ? (
+        <div className="card stack">
           <EnvironmentList
             deploymentTypes={controller.deploymentTypes}
             environments={controller.environments}
@@ -88,20 +86,18 @@ function Dashboard() {
             onStop={(type) => void controller.stopServer(type)}
             onDeleteKafka={() => void controller.deleteKafka()}
           />
-        ) : (
-          <DeploymentPicker
-            deploymentTypes={controller.deploymentTypes}
-            existingTypes={existingTypes}
-            isBusy={controller.busy.has("create") || controller.busy.has("kafka")}
-            onCreate={async (type) => {
-              if (await controller.createEnvironment(type)) setTab("active");
-            }}
-            onCreateKafka={async (payload) => {
-              if (await controller.createKafka(payload)) setTab("active");
-            }}
-          />
-        )}
-      </div>
+        </div>
+      </section>
+
+      {creatingKafka ? (
+        <KafkaCreateDialog
+          isBusy={controller.busy.has("kafka")}
+          onClose={() => setCreatingKafka(false)}
+          onCreate={async (payload) => {
+            if (await controller.createKafka(payload)) setCreatingKafka(false);
+          }}
+        />
+      ) : null}
 
       {controller.kafkaCredentials ? (
         <KafkaCredentialsDialog
