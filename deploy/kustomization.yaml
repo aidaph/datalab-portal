@@ -8,4 +8,4 @@ resources:
 
 images:
   - name: ghcr.io/aidaph/datalab-portal
-    newTag: sha-d7836bb
+    newTag: sha-c5c56c9
