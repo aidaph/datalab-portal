@@ -17,8 +17,8 @@ export function KafkaCredentialsDialog({ credentials, onClose }: KafkaCredential
 
   const clientConfig = [
     `bootstrap.servers=${credentials.bootstrap_servers}`,
-    "security.protocol=SASL_PLAINTEXT",
-    "sasl.mechanism=PLAIN",
+    `security.protocol=${credentials.security_protocol ?? "SASL_PLAINTEXT"}`,
+    `sasl.mechanism=${credentials.sasl_mechanism ?? "PLAIN"}`,
     `sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="${credentials.client_username}" password="${credentials.client_password}";`
   ].join("\n");
 

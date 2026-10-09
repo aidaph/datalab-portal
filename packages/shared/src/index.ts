@@ -48,6 +48,8 @@ export interface JupyterServer {
 
 export interface KafkaCreatePayload {
   replicas: number;
+  /** SASL/PLAIN user for clients; the API uses "kafkaclient1" if omitted. */
+  client_username?: string;
   client_password?: string;
 }
 
@@ -57,6 +59,9 @@ export interface KafkaCluster {
   replicas: number;
   ready_replicas: number;
   bootstrap_servers: string;
+  /** Absent in API versions before SASL_SSL (they used SASL_PLAINTEXT). */
+  security_protocol?: string;
+  sasl_mechanism?: string;
   client_username: string;
   /** Absent in API versions that do not report it. */
   created_by?: string | null;

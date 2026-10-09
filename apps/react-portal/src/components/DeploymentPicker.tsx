@@ -12,6 +12,13 @@ interface DeploymentPickerProps {
 }
 
 const MIN_PASSWORD_LENGTH = 12;
+// Same rules as the API (KafkaCreate): the user and password go into the
+// brokers' JAAS configuration.
+const DEFAULT_KAFKA_USER = "kafkaclient1";
+const KAFKA_USER_PATTERN = /^[A-Za-z][A-Za-z0-9._-]{2,31}$/;
+const KAFKA_PASSWORD_FORBIDDEN = /["\\\s]/;
+// Brokers are published as kafka0..kafka2.datalab.ifca.es (KAFKA_MAX_BROKERS in the API).
+const MAX_KAFKA_BROKERS = 3;
 
 export function DeploymentPicker({
   deploymentTypes,
@@ -26,23 +33,35 @@ export function DeploymentPicker({
   const [selectedType, setSelectedType] = useState<string>(
     () => deploymentTypes.find(isSelectable)?.type ?? ""
   );
-  const [replicas, setReplicas] = useState(1);
+  const [replicas, setReplicas] = useState(MAX_KAFKA_BROKERS);
+  const [username, setUsername] = useState(DEFAULT_KAFKA_USER);
   const [password, setPassword] = useState("");
 
   const selected = deploymentTypes.find((deployment) => deployment.type === selectedType);
   const nothingToCreate = !deploymentTypes.some(isSelectable);
   const canSubmit = !!selected && isSelectable(selected);
   const isKafka = selectedType === "kafka";
+  const usernameError = !KAFKA_USER_PATTERN.test(username)
+    ? "3–32 characters: letters, digits, '.', '_' or '-', starting with a letter."
+    : username.toLowerCase() === "admin"
+      ? "'admin' is reserved for the brokers."
+      : "";
   const passwordError =
-    password && password.length < MIN_PASSWORD_LENGTH
+    password && KAFKA_PASSWORD_FORBIDDEN.test(password)
+      ? "It cannot contain quotes, backslashes or spaces."
+      : password && password.length < MIN_PASSWORD_LENGTH
       ? `At least ${MIN_PASSWORD_LENGTH} characters (or leave it empty to generate one).`
       : "";
 
   function submit() {
     if (!canSubmit) return;
     if (isKafka) {
-      if (passwordError) return;
-      onCreateKafka({ replicas, ...(password ? { client_password: password } : {}) });
+      if (passwordError || usernameError) return;
+      onCreateKafka({
+        replicas,
+        client_username: username,
+        ...(password ? { client_password: password } : {})
+      });
     } else {
       onCreate(selectedType);
     }
@@ -103,11 +122,30 @@ export function DeploymentPicker({
               className="field-input"
               type="number"
               min={1}
-              max={5}
+              max={MAX_KAFKA_BROKERS}
               value={replicas}
-              onChange={(event) => setReplicas(Math.min(5, Math.max(1, Number(event.target.value) || 1)))}
+              onChange={(event) =>
+                setReplicas(Math.min(MAX_KAFKA_BROKERS, Math.max(1, Number(event.target.value) || 1)))
+              }
             />
-            <span className="field-hint">Between 1 and 5. Also used as the replication factor.</span>
+            <span className="field-hint">
+              Between 1 and {MAX_KAFKA_BROKERS} (one per public host). Also used as the replication factor.
+            </span>
+          </label>
+          <label className="field">
+            <span className="field-label">Client user</span>
+            <input
+              className="field-input"
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              value={username}
+              aria-invalid={!!usernameError}
+              onChange={(event) => setUsername(event.target.value.trim())}
+            />
+            <span className={`field-hint${usernameError ? " field-error" : ""}`}>
+              {usernameError || "SASL/PLAIN user your clients (e.g. Fluent Bit) will log in with."}
+            </span>
           </label>
           <label className="field">
             <span className="field-label">Client password (optional)</span>
@@ -136,7 +174,7 @@ export function DeploymentPicker({
       ) : null}
 
       <div className="actions">
-        <button type="submit" className="btn btn-primary" disabled={isBusy || !canSubmit || !!passwordError}>
+        <button type="submit" className="btn btn-primary" disabled={isBusy || !canSubmit || !!passwordError || (isKafka && !!usernameError)}>
           {isBusy ? "Creating…" : "Create environment"}
         </button>
       </div>

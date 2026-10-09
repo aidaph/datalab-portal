@@ -53,3 +53,23 @@ jobs:
             VITE_DATALAB_API_BASE_URL=https://api.datalab.ifca.es
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Argo CD deploys deploy/ from main: pin the image just published so the
+  # cluster picks it up (and a revert of this commit rolls it back).
+  deploy:
+    needs: image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin image tag
+        run: |
+          tag="sha-${GITHUB_SHA::7}"
+          sed -i "s/^\(\s*newTag:\).*/\1 ${tag}/" deploy/kustomization.yaml
+          git diff --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Deploy portal ${tag} [skip ci]"
+          git push

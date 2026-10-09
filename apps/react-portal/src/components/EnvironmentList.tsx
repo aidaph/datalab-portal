@@ -305,7 +305,7 @@ function KafkaRow({ kafka, label, manageable, busy, onDelete }: KafkaRowProps) {
       </div>
 
       <div className="env-row-link">
-        <code className="code-link" title="Bootstrap servers (SASL/PLAIN)">
+        <code className="code-link" title="Bootstrap servers (SASL_SSL, PLAIN)">
           {kafka.bootstrap_servers}
         </code>
         <CopyButton text={kafka.bootstrap_servers} label="Copy bootstrap servers" />

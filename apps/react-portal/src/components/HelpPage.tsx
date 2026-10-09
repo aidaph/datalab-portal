@@ -13,9 +13,9 @@ const KAFKA_EXAMPLE = `from confluent_kafka import Producer
 
 producer = Producer({
     "bootstrap.servers": "<bootstrap servers shown in the portal>",
-    "security.protocol": "SASL_PLAINTEXT",
+    "security.protocol": "SASL_SSL",
     "sasl.mechanisms": "PLAIN",
-    "sasl.username": "kafkaclient1",
+    "sasl.username": "<user chosen when the cluster was created>",
     "sasl.password": "<password shown when the cluster was created>",
 })
 producer.produce("my-topic", b"hello from DataLab")
@@ -144,8 +144,10 @@ export function HelpPage() {
           <h3>Connecting to Kafka</h3>
           <p>
             When you create a Kafka cluster, the portal shows its client configuration <strong>once</strong>: save
-            the password at that moment. The bootstrap servers are always visible in the environment list. Clients
-            authenticate with SASL/PLAIN as user <code>kafkaclient1</code>. For example, with Python:
+            the password at that moment. The bootstrap servers (<code>kafka0</code>–<code>kafka2.datalab.ifca.es</code>)
+            are always visible in the environment list. Connections are encrypted with TLS and clients authenticate
+            with SASL/PLAIN as the user chosen when the cluster was created (<code>kafkaclient1</code> by
+            default). For example, with Python:
           </p>
           <pre className="code-block">
             <code>{KAFKA_EXAMPLE}</code>

@@ -1,9 +1,8 @@
 # DataLab portal at https://portal.datalab.ifca.es
 #
-# TLS uses the *.datalab.ifca.es wildcard, copied into this namespace:
-#   kubectl -n datalab-api get secret cert-secret -o json \
-#     | jq 'del(.metadata.namespace,.metadata.uid,.metadata.resourceVersion,.metadata.creationTimestamp,.metadata.ownerReferences)' \
-#     | kubectl -n datalab-portal apply -f -
+# TLS uses the *.datalab.ifca.es wildcard "cert-secret", replicated into this
+# namespace by the ClusterSecret clustersecret/cert-secret (datalab-portal must
+# be in its matchNamespace).
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -30,8 +29,8 @@ spec:
         runAsNonRoot: true
       containers:
         - name: portal
-          image: ghcr.io/aidaph/datalab-portal:latest
-          imagePullPolicy: Always
+          # Tag set in kustomization.yaml (updated by CI on every push to main).
+          image: ghcr.io/aidaph/datalab-portal
           ports:
             - containerPort: 8080
           readinessProbe:
