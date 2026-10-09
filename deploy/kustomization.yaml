@@ -1,0 +1,11 @@
+# Deployed by Argo CD (application "datalab-portal") from the main branch.
+# The CI workflow rewrites newTag after publishing each image.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - portal.yaml
+
+images:
+  - name: ghcr.io/aidaph/datalab-portal
+    newTag: sha-d7836bb
